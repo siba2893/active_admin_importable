@@ -43,6 +43,11 @@ class CsvDb
           options[:before_save].call(data) if options[:before_save]
 
           role = options[:role] || :default
+
+          if new_headers = options[:replace_headers]
+            data = data.transform_keys { |k| new_headers[k].present? ? new_headers[k] : k }
+          end
+
           if key_field = options[:find_by]
             create_or_update! target_model, data, key_field
           else
