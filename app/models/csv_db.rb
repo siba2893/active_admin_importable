@@ -66,6 +66,8 @@ class CsvDb
       scope = target_model.where(key_field => key_value)
       if obj = scope.first
         obj.update_attributes!(values)
+      elsif options[:handle_create]
+        options[:handle_create].call(values)
       else
         scope.create!(values)
       end
