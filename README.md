@@ -42,6 +42,15 @@ The Import button should now appear. Click it and upload a CSV file with a heade
 *  ``:before_save => proc { |row| row[:salary] ||= 0 }``
 
   Modify field values before write (and before find, if present).
+  
+*  ```
+    :replace_headers => {
+        first_name: :name,
+        whatsapp_link_location: :location
+    }
+    ```
+    
+  Allows you to replace headers coming from the CSV (take into account that headers like "User Identification" will become "user_identification").
 
 ## Custom Import Behavior
 
