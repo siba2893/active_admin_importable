@@ -20,13 +20,13 @@ class CsvDb
 
     def convert_save(target_model, csv_data, options, &block)
       csv_data = remove_bom(csv_data.read)
-      csv_data = csv_data.force_encoding('utf-8') if csv_data.respond_to?(:force_encoding)
+      csv_data = csv_data.force_encoding('ISO-8859-1')
       parser_class = (RUBY_VERSION=='1.8.7') ? FasterCSV : CSV
       errors = nil
 
       begin
         target_model.transaction do
-          parser_class.parse(csv_data, :headers => true, :header_converters => :symbol, col_sep: options[:col_sep] || ',') do |row|
+          parser_class.parse(csv_data, :headers => true, :header_converters => :symbol, col_sep: (options[:col_sep] || ',')) do |row|
             append_row(target_model, row, options, &block)
           end
         end
@@ -57,6 +57,8 @@ class CsvDb
           end
 
           data.compact! if options[:remove_null].to_b
+
+          data.each{ |k,v| data[k] = v.strip }
 
           if options[:handle_create_or_update].present?
             options[:handle_create_or_update].call(target_model, data, key_field)
