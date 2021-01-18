@@ -1,5 +1,7 @@
 require 'csv'
 class CsvDb
+  attr_accessor :error
+
   class << self
     def char_code(c)
       c.respond_to?(:ord) ? c.ord : c
@@ -20,17 +22,23 @@ class CsvDb
       csv_data = remove_bom(csv_data.read)
       csv_data = csv_data.force_encoding('utf-8') if csv_data.respond_to?(:force_encoding)
       parser_class = (RUBY_VERSION=='1.8.7') ? FasterCSV : CSV
+      errors = nil
+
       begin
         target_model.transaction do
           parser_class.parse(csv_data, :headers => true, :header_converters => :symbol) do |row|
             append_row(target_model, row, options, &block)
           end
         end
+      rescue => e
+        errors = e.message
       ensure
         if options[:reset_pk_sequence]
           target_model.connection.reset_pk_sequence! target_model.table_name
         end
       end
+
+      errors
     end
 
     def append_row(target_model, row, options, &block)
@@ -48,13 +56,17 @@ class CsvDb
             data = data.transform_keys { |k| new_headers[k].present? ? new_headers[k] : k }
           end
 
-          if key_field = options[:find_by]
-            create_or_update! target_model, data, key_field
+          if options[:handle_create_or_update].present?
+            options[:handle_create_or_update].call(target_model, data, key_field)
           else
-            if role == :default
-              target_model.create!(data)
+            if key_field = options[:find_by]
+              create_or_update! target_model, data, key_field
             else
-              target_model.create!(data, :as => role) # Old version ActiveRecord
+              if role == :default
+                target_model.create!(data)
+              else
+                target_model.create!(data, :as => role) # Old version ActiveRecord
+              end
             end
           end
         end
@@ -66,8 +78,6 @@ class CsvDb
       scope = target_model.where(key_field => key_value)
       if obj = scope.first
         obj.update_attributes!(values)
-      elsif options[:handle_create]
-        options[:handle_create].call(values)
       else
         scope.create!(values)
       end
