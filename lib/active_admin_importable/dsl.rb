@@ -7,7 +7,7 @@ module ActiveAdminImportable
       end
 
       collection_action :upload_csv do
-        render "admin/csv/upload_csv"
+        render options[:view].present? ? options[:view] : "admin/csv/upload_csv"
       end
 
       collection_action :import_csv, :method => :post do
