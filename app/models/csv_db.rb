@@ -60,7 +60,7 @@ class CsvDb
             options[:handle_create_or_update].call(target_model, data, key_field)
           else
             if key_field = options[:find_by]
-              create_or_update! target_model, data, key_field
+              create_or_update! target_model, data, key_field, options
             else
               if role == :default
                 target_model.create!(data)
@@ -73,10 +73,15 @@ class CsvDb
       end
     end
 
-    def create_or_update!(target_model, values, key_field)
+    def create_or_update!(target_model, values, key_field, options)
       key_value = values[key_field]
       scope = target_model.where(key_field => key_value)
       if obj = scope.first
+
+        if options[:ignore_on_update].present?
+          options[:ignore_on_update].each {|k| values.delete(k) }
+        end
+
         obj.update_attributes!(values)
       else
         scope.create!(values)
