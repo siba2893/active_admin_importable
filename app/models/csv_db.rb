@@ -26,7 +26,7 @@ class CsvDb
 
       begin
         target_model.transaction do
-          parser_class.parse(csv_data, :headers => true, :header_converters => :symbol) do |row|
+          parser_class.parse(csv_data, :headers => true, :header_converters => :symbol, col_sep: options[:col_sep] || ',') do |row|
             append_row(target_model, row, options, &block)
           end
         end
@@ -74,10 +74,12 @@ class CsvDb
     end
 
     def create_or_update!(target_model, values, key_field, options)
-      key_value = values[key_field]
+      key_value = values[key_field.to_sym]
       scope = target_model.where(key_field => key_value)
       if obj = scope.first
 
+        values[:id] = obj.id
+        
         if options[:ignore_on_update].present?
           options[:ignore_on_update].each {|k| values.delete(k) }
         end

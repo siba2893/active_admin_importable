@@ -12,7 +12,7 @@ module ActiveAdminImportable
 
       collection_action :import_csv, :method => :post do
 
-        if params[:dump].nil?
+        if params[:dump].nil? || params[:dump][:file].nil?
           flash[:alert] = "You should choose file for import"
           redirect_to action: :upload_csv and return
         end
@@ -33,7 +33,17 @@ module ActiveAdminImportable
         end
 
         role = resources_configuration[:self][:role]
-        errors = CsvDb.convert_save(active_admin_config.resource_class, params[:dump][:file], options.merge(:role=>role), &block)
+
+        result_options = options.dup
+
+        if params[:dump][:custom_options].present?
+          custom_options = params[:dump][:custom_options].permit!.to_h.symbolize_keys
+          result_options = options.merge(custom_options)
+        end
+
+        result_options = result_options.merge(:role=>role)
+
+        errors = CsvDb.convert_save(active_admin_config.resource_class, params[:dump][:file], result_options, &block)
 
         if errors.present?
           flash[:error] = errors
