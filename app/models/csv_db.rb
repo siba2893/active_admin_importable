@@ -56,6 +56,8 @@ class CsvDb
             data = data.transform_keys { |k| new_headers[k].present? ? new_headers[k] : k }
           end
 
+          data.compact! if options[:remove_null].to_b
+
           if options[:handle_create_or_update].present?
             options[:handle_create_or_update].call(target_model, data, key_field)
           else
