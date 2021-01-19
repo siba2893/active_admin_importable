@@ -25,6 +25,8 @@ module ActiveAdminImportable
               'json'
             when 'text/xml'
               'xml'
+            else
+              params[:dump][:file].content_type
           end
 
         unless extension.in? %w{csv}
