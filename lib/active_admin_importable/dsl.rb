@@ -28,7 +28,7 @@ module ActiveAdminImportable
           end
 
         unless extension.in? %w{csv}
-          flash[:alert] = "You can import file only with extension csv"
+          flash[:alert] = "#{extension} is not a valid extension. You can import file only with extension .csv"
           redirect_to action: :upload_csv and return
         end
 
