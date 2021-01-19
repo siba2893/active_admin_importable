@@ -29,9 +29,11 @@ module ActiveAdminImportable
               params[:dump][:file].content_type
           end
 
-        unless extension.in? %w{csv}
-          flash[:alert] = "#{extension} is not a valid extension. You can import file only with extension .csv"
-          redirect_to action: :upload_csv and return
+        if options[:validate_extension].to_b
+          unless extension.in? %w{csv}
+            flash[:alert] = "#{extension} is not a valid extension. You can import file only with extension .csv"
+            redirect_to action: :upload_csv and return
+          end
         end
 
         role = resources_configuration[:self][:role]
